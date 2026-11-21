@@ -1,0 +1,14 @@
+{
+  "openapi": "3.1.0",
+  "info": { "title": "IracemaFlix Providers API", "version": "1.0.0", "description": "Catálogo e execução isolada dos módulos de providers do projeto." },
+  "servers": [{ "url": "https://SEU-HOST-PROVIDERS" }],
+  "components": { "securitySchemes": { "BearerAuth": { "type": "http", "scheme": "bearer" } } },
+  "security": [{ "BearerAuth": [] }],
+  "paths": {
+    "/healthz": { "get": { "security": [], "summary": "Healthcheck", "responses": { "200": { "description": "Serviço ativo" } } } },
+    "/openapi.json": { "get": { "security": [], "summary": "Esta especificação", "responses": { "200": { "description": "OpenAPI JSON" } } } },
+    "/api/v1/providers": { "get": { "summary": "Listar módulos habilitados", "responses": { "200": { "description": "IDs e nomes" } } } },
+    "/api/v1/providers/{providerId}/streams": { "post": { "summary": "Executar um módulo em worker isolado", "parameters": [{ "name": "providerId", "in": "path", "required": true, "schema": { "type": "string" } }], "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "required": ["tmdbId", "mediaType"], "properties": { "tmdbId": { "type": "string" }, "mediaType": { "type": "string", "enum": ["movie", "tv"] }, "season": { "type": "integer" }, "episode": { "type": "integer" } } } } } }, "responses": { "200": { "description": "Streams do provider" }, "404": { "description": "Provider inexistente" }, "504": { "description": "Tempo limite do worker" } } } },
+    "/api/v1/search": { "post": { "summary": "Buscar em até oito providers selecionados", "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "required": ["tmdbId", "mediaType", "providerIds"], "properties": { "tmdbId": { "type": "string" }, "mediaType": { "type": "string", "enum": ["movie", "tv"] }, "season": { "type": "integer" }, "episode": { "type": "integer" }, "providerIds": { "type": "array", "maxItems": 8, "items": { "type": "string" } } } } } } }, "responses": { "200": { "description": "Resultados e falhas por provider" }, "400": { "description": "Parâmetros inválidos" } } } }
+  }
+}
