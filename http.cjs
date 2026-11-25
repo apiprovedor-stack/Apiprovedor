@@ -34,7 +34,7 @@ function configureHttp(app, service, config = {}, options = {}) {
     next();
   });
 
-  app.get('/healthz', (_req, res) => res.json({ ok: true, service, version: '1.0.0' }));
+  app.get('/healthz', (_req, res) => res.json({ ok: true, service, version: '1.0.1' }));
   app.use('/api/v1', (req, res, next) => {
     const configured = String(config.API_KEY || '');
     if (configured) {

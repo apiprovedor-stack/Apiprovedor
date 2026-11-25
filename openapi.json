@@ -1,6 +1,6 @@
 {
   "openapi": "3.1.0",
-  "info": { "title": "IracemaFlix Providers API", "version": "1.0.0", "description": "Catálogo e execução isolada dos módulos de providers do projeto." },
+  "info": { "title": "IracemaFlix Providers API", "version": "1.0.2", "description": "Catálogo e execução isolada dos módulos de providers do projeto." },
   "servers": [{ "url": "https://SEU-HOST-PROVIDERS" }],
   "components": { "securitySchemes": { "BearerAuth": { "type": "http", "scheme": "bearer" } } },
   "security": [{ "BearerAuth": [] }],
@@ -9,6 +9,6 @@
     "/openapi.json": { "get": { "security": [], "summary": "Esta especificação", "responses": { "200": { "description": "OpenAPI JSON" } } } },
     "/api/v1/providers": { "get": { "summary": "Listar módulos habilitados", "responses": { "200": { "description": "IDs e nomes" } } } },
     "/api/v1/providers/{providerId}/streams": { "post": { "summary": "Executar um módulo em worker isolado", "parameters": [{ "name": "providerId", "in": "path", "required": true, "schema": { "type": "string" } }], "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "required": ["tmdbId", "mediaType"], "properties": { "tmdbId": { "type": "string" }, "mediaType": { "type": "string", "enum": ["movie", "tv"] }, "season": { "type": "integer" }, "episode": { "type": "integer" } } } } } }, "responses": { "200": { "description": "Streams do provider" }, "404": { "description": "Provider inexistente" }, "504": { "description": "Tempo limite do worker" } } } },
-    "/api/v1/search": { "post": { "summary": "Buscar em até oito providers selecionados", "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "required": ["tmdbId", "mediaType", "providerIds"], "properties": { "tmdbId": { "type": "string" }, "mediaType": { "type": "string", "enum": ["movie", "tv"] }, "season": { "type": "integer" }, "episode": { "type": "integer" }, "providerIds": { "type": "array", "maxItems": 8, "items": { "type": "string" } } } } } } }, "responses": { "200": { "description": "Resultados e falhas por provider" }, "400": { "description": "Parâmetros inválidos" } } } }
+    "/api/v1/search": { "post": { "summary": "Buscar em até oito providers; pode retornar resultado parcial", "description": "A busca tem prazo global configurado em PROVIDER_SEARCH_TIMEOUT_MS. Quando ele é atingido, retorna os resultados concluídos com partial=true e cancela os workers pendentes.", "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "required": ["tmdbId", "mediaType", "providerIds"], "properties": { "tmdbId": { "type": "string" }, "mediaType": { "type": "string", "enum": ["movie", "tv"] }, "season": { "type": "integer" }, "episode": { "type": "integer" }, "providerIds": { "type": "array", "maxItems": 8, "items": { "type": "string" } } } } } } }, "responses": { "200": { "description": "Resultados e falhas por provider; partial=true indica que o prazo global foi atingido" }, "400": { "description": "Parâmetros inválidos" } } } }
   }
 }

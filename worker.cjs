@@ -5,6 +5,23 @@ const path = require('node:path');
 
 const PROVIDERS_DIR = path.join(__dirname, 'providers');
 const MAX_INPUT_BYTES = 12 * 1024;
+let currentProviderId = 'unknown';
+
+function redactDiagnostic(value) {
+  return String(value ?? '')
+    .replace(/([?&](?:api_key|token|password|username|key)=)[^&\s]+/gi, '$1[redacted]')
+    .replace(/https?:\/\/[^\s"'<>]+/gi, '[url]')
+    .slice(0, 1000);
+}
+
+function workerLog(level, args) {
+  const message = args.map((value) => {
+    if (value instanceof Error) return value.stack || value.message;
+    if (typeof value === 'string') return value;
+    try { return JSON.stringify(value); } catch { return String(value); }
+  }).join(' ');
+  process.stderr.write(`${JSON.stringify({ level, providerId: currentProviderId, message: redactDiagnostic(message) })}\n`);
+}
 
 function readInput() {
   return new Promise((resolve, reject) => {
@@ -28,12 +45,16 @@ function readInput() {
 }
 
 async function main() {
-  // Provider modules may log diagnostics; keep stdout reserved for the result protocol.
-  console.log = console.info = console.warn = console.error = () => {};
+  // Keep stdout reserved for the result protocol; provider diagnostics are redacted on stderr.
+  console.log = (...args) => workerLog('info', args);
+  console.info = (...args) => workerLog('info', args);
+  console.warn = (...args) => workerLog('warn', args);
+  console.error = (...args) => workerLog('error', args);
   try {
     const input = await readInput();
     const providerId = String(input.providerId || '');
     if (!/^[a-z0-9][a-z0-9_-]{0,63}$/.test(providerId)) throw new Error('invalid_provider');
+    currentProviderId = providerId;
     const file = path.join(PROVIDERS_DIR, `${providerId}.js`);
     if (!fs.existsSync(file) || path.dirname(file) !== PROVIDERS_DIR) throw new Error('provider_not_found');
 
